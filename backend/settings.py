@@ -30,7 +30,7 @@ DOTENV_PATH = os.environ.get(
         ".env"
     )
 )
-MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION = "2024-05-01-preview"
+MINIMUM_SUPPORTED_AZURE_OPENAI_PREVIEW_API_VERSION = "2025-04-01-preview"
 
 
 class _UiSettings(BaseSettings):
@@ -98,7 +98,8 @@ class _AzureOpenAISettings(BaseSettings):
         env_prefix="AZURE_OPENAI_",
         env_file=DOTENV_PATH,
         extra='ignore',
-        env_ignore_empty=True
+        env_ignore_empty=True,
+        protected_namespaces=('settings_',)
     )
     
     model: str
@@ -123,11 +124,28 @@ class _AzureOpenAISettings(BaseSettings):
     embedding_endpoint: Optional[str] = None
     embedding_key: Optional[str] = None
     embedding_name: Optional[str] = None
+    model_name: Optional[str] = None
+    reasoning_effort: str = "none"
     function_call_azure_functions_enabled: Optional[bool] = False
     function_call_azure_functions_tools_key: Optional[str] = None
     function_call_azure_functions_tools_base_url: Optional[str] = None
     function_call_azure_functions_tool_key: Optional[str] = None
     function_call_azure_functions_tool_base_url: Optional[str] = None
+
+    @property
+    def is_o_series_model(self) -> bool:
+        name = (self.model_name or self.model or "").lower()
+        return len(name) >= 2 and name[0] == "o" and name[1].isdigit()
+
+    @property
+    def is_legacy_model(self) -> bool:
+        name = (self.model_name or self.model or "").lower()
+        return name.startswith(("gpt-35", "gpt-4"))
+
+    @property
+    def is_gpt5_series_model(self) -> bool:
+        name = (self.model_name or self.model or "").lower()
+        return name.startswith("gpt-5")
     
     @field_validator('tools', mode='before')
     @classmethod
