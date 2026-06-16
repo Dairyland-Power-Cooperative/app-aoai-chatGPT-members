@@ -241,11 +241,10 @@ async def init_cosmosdb_client():
 def prepare_model_args(request_body, request_headers):
     request_messages = request_body.get("messages", [])
     messages = []
-    system_role = "system" if app_settings.azure_openai.is_legacy_model else "developer"
     if not app_settings.datasource:
         messages = [
             {
-                "role": system_role,
+                "role": "system",
                 "content": app_settings.azure_openai.system_message
             }
         ]
@@ -284,23 +283,13 @@ def prepare_model_args(request_body, request_headers):
 
     model_args = {
         "messages": messages,
+        "temperature": app_settings.azure_openai.temperature,
+        "max_completion_tokens": app_settings.azure_openai.max_tokens,
+        "top_p": app_settings.azure_openai.top_p,
+        "stop": app_settings.azure_openai.stop_sequence,
         "stream": app_settings.azure_openai.stream,
         "model": app_settings.azure_openai.model,
     }
-
-    if app_settings.azure_openai.is_legacy_model:
-        model_args["max_tokens"] = app_settings.azure_openai.max_tokens
-    else:
-        model_args["max_completion_tokens"] = app_settings.azure_openai.max_tokens
-
-    if app_settings.azure_openai.is_o_series_model:
-        model_args["reasoning_effort"] = app_settings.azure_openai.reasoning_effort
-    else:
-        model_args["temperature"] = app_settings.azure_openai.temperature
-        model_args["top_p"] = app_settings.azure_openai.top_p
-        model_args["stop"] = app_settings.azure_openai.stop_sequence
-        if app_settings.azure_openai.is_gpt5_series_model:
-            model_args["reasoning_effort"] = app_settings.azure_openai.reasoning_effort
 
     if len(messages) > 0:
         if messages[-1]["role"] == "user":
@@ -1060,18 +1049,12 @@ async def generate_title(conversation_messages) -> str:
 
     try:
         azure_openai_client = await init_openai_client()
-        title_kwargs = {"model": app_settings.azure_openai.model, "messages": messages}
-        if app_settings.azure_openai.is_legacy_model:
-            title_kwargs["max_tokens"] = 64
-        else:
-            title_kwargs["max_completion_tokens"] = 64
-        if app_settings.azure_openai.is_o_series_model:
-            title_kwargs["reasoning_effort"] = "none"
-        else:
-            title_kwargs["temperature"] = 1
-            if app_settings.azure_openai.is_gpt5_series_model:
-                title_kwargs["reasoning_effort"] = "none"
-        response = await azure_openai_client.chat.completions.create(**title_kwargs)
+        response = await azure_openai_client.chat.completions.create(
+            model=app_settings.azure_openai.model,
+            messages=messages,
+            temperature=1,
+            max_completion_tokens=64,
+        )
 
         title = response.choices[0].message.content
         return title
