@@ -125,6 +125,8 @@ class _AzureOpenAISettings(BaseSettings):
     embedding_key: Optional[str] = None
     embedding_name: Optional[str] = None
     model_name: Optional[str] = None
+    reasoning: bool = False
+    reasoning_effort: str = "medium"
 
     function_call_azure_functions_enabled: Optional[bool] = False
     function_call_azure_functions_tools_key: Optional[str] = None

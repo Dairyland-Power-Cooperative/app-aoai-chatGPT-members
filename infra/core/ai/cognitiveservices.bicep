@@ -31,7 +31,7 @@ resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01
     raiPolicyName: contains(deployment, 'raiPolicyName') ? deployment.raiPolicyName : null
   }
   sku: {
-    name: 'Standard'
+    name: contains(deployment, 'sku') ? deployment.sku : 'Standard'
     capacity: deployment.capacity
   }
 }]

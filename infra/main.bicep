@@ -31,9 +31,13 @@ param openAiResourceName string = ''
 param openAiResourceGroupName string = ''
 param openAiResourceGroupLocation string = location
 param openAiSkuName string = ''
-param openAIModel string = 'gpt-5.2'
-param openAIModelName string = 'gpt-5.2'
-param openAIModelVersion string = ''
+param openAIModel string = 'gpt-5.6-luna'
+param openAIModelName string = 'gpt-5.6-luna'
+param openAIModelVersion string = '2026-07-09'
+param openAIReasoning bool = true
+param openAIReasoningEffort string = 'medium'
+param openAIDeploymentSkuName string = 'GlobalStandard'
+param openAIDeploymentCapacity int = 250
 param openAITemperature int = 0
 param openAITopP int = 1
 param openAIMaxTokens int = 1000
@@ -138,6 +142,8 @@ module backend 'core/host/appservice.bicep' = {
       AZURE_OPENAI_STOP_SEQUENCE: openAIStopSequence
       AZURE_OPENAI_SYSTEM_MESSAGE: openAISystemMessage
       AZURE_OPENAI_STREAM: openAIStream
+      AZURE_OPENAI_REASONING: openAIReasoning
+      AZURE_OPENAI_REASONING_EFFORT: openAIReasoningEffort
     }
   }
 }
@@ -161,7 +167,8 @@ module openAi 'core/ai/cognitiveservices.bicep' = {
           name: openAIModelName
           version: openAIModelVersion
         }
-        capacity: 30
+        sku: openAIDeploymentSkuName
+        capacity: openAIDeploymentCapacity
       }
       {
         name: embeddingDeploymentName
